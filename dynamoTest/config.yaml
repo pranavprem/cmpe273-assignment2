@@ -1,0 +1,14 @@
+region: us-west-2
+
+function_name: dynamoTest
+handler: service.handler
+# role: lambda_basic_execution
+description: Testing connecting to DynamoDB from lambda function
+
+# if access key and secret are left blank, boto will use the credentials
+# defined in the [default] section of ~/.aws/credentials.
+
+
+# dist_directory: dist
+# timeout: 15
+# memory_size: 512
