@@ -1,8 +1,15 @@
-# -*- coding: utf-8 -*-
-
+import boto3
 
 def handler(event, context):
-    # Your code goes here!
-    e = event.get('e')
-    pi = event.get('pi')
-    return e + pi
+    client = boto3.client("dynamodb")
+    try:
+        client.delete_item(TableName="pizzashopmenu", Key=event)
+    except Exception, e:
+        return 400, e
+    return 200, "OK"
+
+
+""" body mapping templates: 
+ input:
+{"menu_id":{"S": "$input.params('menu-id')"}}
+"""
