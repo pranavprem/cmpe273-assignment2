@@ -15,7 +15,14 @@ def handler(event, context):
         store_hours[item] = it
     
     try:
-        client.put_item(TableName="pizzashopmenu", Item={"menu_id":{"S":event["menu_id"]}, "store_name": {"S":event["store_name"]}, "selection":{"L": makeformat(event["selection"],"S")}, "size":{"L":makeformat(event["size"],"S")}, "price":{"L":makeformat(event["price"],"N")}, "store_hours":{"M":store_hours}})
+        client.put_item(TableName="pizzashopmenu",
+                        Item={"menu_id":{"S":event["menu_id"]},
+                              "store_name": {"S":event["store_name"]},
+                              "selection":{"L": makeformat(event["selection"], "S")},
+                              "size":{"L":makeformat(event["size"], "S")},
+                              "price":{"L":makeformat(event["price"], "N")},
+                              "store_hours":{"M":store_hours},
+                              "sequence":{"L":[{"S":"selection"}, {"S":"size"}]}})
     except Exception,e:
         return 400, e
     return 200, "OK"

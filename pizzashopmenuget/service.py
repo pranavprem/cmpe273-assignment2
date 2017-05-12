@@ -5,14 +5,9 @@ def handler(event, context):
     # Your code goes here!
     client = boto3.client("dynamodb")
     response = client.get_item(TableName="pizzashopmenu", Key=event)
-    store_hours = dict()
-    store_hours["Mon"] = response["Item"]["store_hours"]["M"]["Mon"]["S"]
-    store_hours["Tue"] = response["Item"]["store_hours"]["M"]["Tue"]["S"]
-    store_hours["Wed"] = response["Item"]["store_hours"]["M"]["Wed"]["S"]
-    store_hours["Thu"] = response["Item"]["store_hours"]["M"]["Thu"]["S"]
-    store_hours["Fri"] = response["Item"]["store_hours"]["M"]["Fri"]["S"]
-    store_hours["Sat"] = response["Item"]["store_hours"]["M"]["Sat"]["S"]
-    store_hours["Sun"] = response["Item"]["store_hours"]["M"]["Sun"]["S"]
+    store_hours = []
+    for item in response["Item"]["store_hours"]["M"]:
+        store_hours.append([item, response["Item"]["store_hours"]["M"][item]["S"]])
     response["Item"]["store_hours"] = store_hours
     return response
 
@@ -28,16 +23,26 @@ output:
     "menu_id": "$inputRoot.Item.menu_id.S",
     "store_name": "$inputRoot.Item.store_name.S",
     "selection": [
-		#foreach($elem in $inputRoot.Item.selection.L)"$elem.S"#if($foreach.hasNext),#end#end
-    ],
+	#foreach($elem in $inputRoot.Item.selection.L)"$elem.S"#if($foreach.hasNext),#end
+	
+        #end],
     "size": [
-	    #foreach($elem in $inputRoot.Item.size.L)"$elem.S"#if($foreach.hasNext),#end#end
-	    ],
+	#foreach($elem in $inputRoot.Item.size.L)"$elem.S"#if($foreach.hasNext),#end#end],
+    "sequence": [
+	#foreach($elem in $inputRoot.Item.sequence.L)
+	        "$elem.S"#if($foreach.hasNext),#end
+	    
+	    #end
+
+    ],
     "price": [
 	    #foreach($elem in $inputRoot.Item.price.L)"$elem.N"#if($foreach.hasNext),#end#end
+    
     ],
     "store_hours":{
-    	$inputRoot.Item.store_hours
-    }
+    	#foreach($elem in $inputRoot.Item.store_hours)
+    	    #foreach($el in $elem)"$el"#if($foreach.hasNext):#end#end#if($foreach.hasNext),#end
+
+    #end}
 }
 """
