@@ -23,12 +23,12 @@ def handler(event, context):
                            {":o":{"S":"ordering"}})
         for item in menu["Item"]["size"]["L"]:
             response = response + str(i) + ". " + item["S"]
-            if i<len(menu["Item"]["size"]["L"]):
+            if i < len(menu["Item"]["size"]["L"]):
                 response = response + ", "
             i = i + 1
-        return dict({"Message":response})
+        return 200,"OK",dict({"Message":response})
     if item["Item"]["order_status"]["S"] == "ordering":
-        response = "Your order costs $";
+        response = "Your order costs $"
         i = 1
         client.update_item(TableName="pizzashoporder",
                            Key={"order_id":{"S":event["order_id"]}},
@@ -55,8 +55,8 @@ def handler(event, context):
                            ExpressionAttributeValues=
                            {":o": {"S":datetime.now().strftime('%m-%d-%Y@%H:%M:%S')}})
 
-        response = response + menu["Item"]["price"]["L"][event["selection_number"]-1]["N"] +". We will email you when the order is ready. Thank you!"
-        return dict({"Message":response})
+        response = response + menu["Item"]["price"]["L"][event["selection_number"]-1]["N"] + ". We will email you when the order is ready. Thank you!"
+        return 200,"OK",dict({"Message":response})
 
 
 
