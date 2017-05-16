@@ -6,16 +6,20 @@ def handler(event, context):
     client = boto3.client("dynamodb")
 
     try:
-        menu = client.get_item(TableName="pizzashopmenu",
-                               Key={"menu_id":event["menu_id"]})
-        selection = menu["Item"]["selection"]["L"]
-        current_options = []
-        for select in selection:
-            current_options.append(select["S"])
         new_options = []
-        for select in event["selections"]:
-            if select not in current_options:
-                new_options.append(dict({"S":select}))
+        keys_in_event = [keys for keys in event]
+        if "selections" not in keys_in_event:
+            new_options.append(dict({"S":"Vegetable"}))
+        else:
+            menu = client.get_item(TableName="pizzashopmenu",
+                                   Key={"menu_id":event["menu_id"]})
+            selection = menu["Item"]["selection"]["L"]
+            current_options = []
+            for select in selection:
+                current_options.append(select["S"])
+            for select in event["selections"]:
+                if select not in current_options:
+                    new_options.append(dict({"S":select}))
         client.update_item(TableName="pizzashopmenu", Key={"menu_id":event["menu_id"]},
                            UpdateExpression="SET #sel = list_append(#sel, :val1)",
                            ExpressionAttributeNames={"#sel": "selection"},

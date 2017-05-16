@@ -33,7 +33,7 @@ def handler(event, context):
         open_time = datetime.strptime(hours[0], "%I%p").strftime("%H")
         close_time = datetime.strptime(hours[1], "%I%p").strftime("%H")
         now_time = datetime.now().strftime('%H')
-        if int(now_time) <= int(open_time) and int(now_time) >= int(close_time):
+        if int(now_time) <= int(open_time) or int(now_time) >= int(close_time):
             return 200, "OK", {"Message":"Restaurant is now closed"}
         else:
             client.put_item(TableName="pizzashoporder",
