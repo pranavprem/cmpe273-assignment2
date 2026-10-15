@@ -1,0 +1,3 @@
+# Direct runtime dependency of the Lambda handlers.
+# botocore, jmespath, s3transfer, and urllib3 are installed with this pin.
+boto3==1.43.114

@@ -1,4 +1,6 @@
 {
-  "pi": 3.14,
-  "e": 2.718
+  "menu_id": "menu-1",
+  "order_id": "order-1",
+  "customer_name": "John Smith",
+  "customer_email": "foobar@gmail.com"
 }

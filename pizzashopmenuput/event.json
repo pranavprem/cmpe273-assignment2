@@ -1,8 +1,4 @@
 {
-    "menu_id": "xxxxxxxxx",
-    "selections": [ 
-        "Cheese",
-        "Pepperoni",
-        "Vegetable"
-    ]   
-} 
+  "menu_id": {"S": "menu-1"},
+  "selections": ["Cheese", "Pepperoni", "Vegetable"]
+}
