@@ -1,56 +1,56 @@
-import boto3
-import json
 from datetime import datetime
 
-def makeformat(list, varname):
-    return [dict({varname:item}) for item in list]
+import boto3
+
+DAYS = ("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+
+
+def closed_message(store_hours, now):
+    """Return a closed message, or None when the store is open.
+
+    Hours are compared at hour resolution. "10am-10pm" is open from 10:00
+    inclusive until 22:00 exclusive. The original check used `<=` on the
+    opening hour, so the store was closed for that entire hour (10:30 counted
+    as closed). A missing weekday is "closed today"; the old code raised
+    KeyError and the message below was unreachable.
+    """
+    today = store_hours.get(DAYS[now.weekday()])
+    if today is None:
+        return "Restaurant closed today"
+    window = today["S"].split("-")
+    open_hour = int(datetime.strptime(window[0], "%I%p").strftime("%H"))
+    close_hour = int(datetime.strptime(window[1], "%I%p").strftime("%H"))
+    current_hour = int(now.strftime("%H"))
+    if current_hour < open_hour or current_hour >= close_hour:
+        return "Restaurant is now closed"
+    return None
+
 
 def handler(event, context):
-    # Your code goes here!
     client = boto3.client("dynamodb")
     try:
-        menu = client.get_item(TableName="pizzashopmenu", Key={"menu_id":{"S":event["menu_id"]}})
-        if datetime.today().weekday() == 0:
-            day = "Mon"
-        elif datetime.today().weekday() == 1:
-            day = "Tue"
-        elif datetime.today().weekday() == 2:
-            day = "Wed"
-        elif datetime.today().weekday() == 3:
-            day = "Thu"
-        elif datetime.today().weekday() == 4:
-            day = "Fri"
-        elif datetime.today().weekday() == 5:
-            day = "Sat"
-        elif datetime.today().weekday() == 6:
-            day = "Sun"
+        menu = client.get_item(TableName="pizzashopmenu", Key={"menu_id": {"S": event["menu_id"]}})
+        closed = closed_message(menu["Item"]["store_hours"]["M"], datetime.now())
+        if closed:
+            return 200, "OK", {"Message": closed}
 
-        if menu["Item"]["store_hours"]["M"][day] is not None:
-            hours = menu["Item"]["store_hours"]["M"][day]["S"].split("-")
-        else:
-            return 200, "OK", {"Message":"Restaurant closed today"}
+        client.put_item(
+            TableName="pizzashoporder",
+            Item={
+                "order_id": {"S": event["order_id"]},
+                "menu_id": {"S": event["menu_id"]},
+                "customer_name": {"S": event["customer_name"]},
+                "customer_email": {"S": event["customer_email"]},
+                "order_status": {"S": "selecting"},
+                "ord": {"M": {}},
+            },
+        )
 
-        open_time = datetime.strptime(hours[0], "%I%p").strftime("%H")
-        close_time = datetime.strptime(hours[1], "%I%p").strftime("%H")
-        now_time = datetime.now().strftime('%H')
-        if int(now_time) <= int(open_time) or int(now_time) >= int(close_time):
-            return 200, "OK", {"Message":"Restaurant is now closed"}
-        else:
-            client.put_item(TableName="pizzashoporder",
-                            Item={"order_id":{"S":event["order_id"]},
-                                  "menu_id":{"S":event["menu_id"]},
-                                  "customer_name":{"S":event["customer_name"]},
-                                  "customer_email":{"S":event["customer_email"]},
-                                  "order_status":{"S":"selecting"},
-                                  "ord":{"M":{}}})
-
-            response = "Hi "+event["customer_name"]+", please choose one of these selection: "
-            i = 1
-            for item in menu["Item"]["selection"]["L"]:
-                response = response + str(i) + ". " + item["S"]
-                if i < len(menu["Item"]["selection"]["L"]):
-                    response = response + ", "
-                i = i + 1
-    except Exception, e:
+        choices = ", ".join(
+            f"{index}. {item['S']}"
+            for index, item in enumerate(menu["Item"]["selection"]["L"], start=1)
+        )
+        response = f"Hi {event['customer_name']}, please choose one of these selection: {choices}"
+    except Exception as e:
         return 400, e
-    return 200, "OK", {"Message":response}
+    return 200, "OK", {"Message": response}

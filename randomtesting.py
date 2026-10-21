@@ -1,4 +1,8 @@
 from datetime import datetime
+
+# Scratch script from May 2017, used while figuring out store-hour parsing
+# for pizzashoporderpost. "5pm" -> hour 17.
+
 # if datetime.today().weekday() == 0:
 #     day = "Mon"
 # elif datetime.today().weekday() == 1:
@@ -14,8 +18,11 @@ from datetime import datetime
 # elif datetime.today().weekday() == 6:
 #     day = "Sun"
 
-# print day
 
-tes = "5pm"
+def main():
+    tes = "5pm"
+    print(datetime.strptime(tes, "%I%p").strftime("%H"))
 
-print datetime.strptime(tes, "%I%p").strftime("%H")
+
+if __name__ == "__main__":
+    main()
